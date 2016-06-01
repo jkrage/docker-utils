@@ -59,7 +59,7 @@ function prune_dangling_images () {
 
 # Load list of images to be updated
 # Use command-line argument if one was provided
-# Othewrise use CONF_DOCKER_IMAGE_LIST
+# Otherwise use CONF_DOCKER_IMAGE_LIST
 declare -a IMAGE_LIST
 _IMAGE_LIST_FILE="${1:-${CONFIG_DOCKER_IMAGE_LIST}}"
 echo "==> Updating list from ${_IMAGE_LIST_FILE}..."
