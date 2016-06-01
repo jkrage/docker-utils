@@ -48,9 +48,11 @@ function update_image () {
 function prune_dangling_images () {
     local DANGLERS=$(${CMD_DOCKER} images --filter "dangling=true" -q)
     if [ ! -z "${DANGLERS}" ]; then
-        echo "    Pruning: ${DANGLERS}"
         set +e
-        ${CMD_DOCKER} rmi "${DANGLERS}"
+        for image in ${DANGLERS}; do
+            echo "    Pruning: ${image}"
+            ${CMD_DOCKER} rmi "${image}"
+        done
         set -e
     else
         echo "    No dangling images found."
