@@ -7,10 +7,11 @@
 ### After all images have been pulled, delete dangling images that are no longer referenced
 ###   (in-use layers will error on this)
 ###
-### Set CMD_DOCKER to point to the docker binary
-### Set CONFIG_DOCKER_IMAGE_LIST to the file with list of images to update;
+### Set DOCKER to point to the docker binary
+### Set DOCKER_IMAGE_UPDATE_LIST to the file with list of images to update;
 ###     defaults to ${HOME}/.config/docker-image-list.cfg
 ###     script commmand
+### Set DOCKER_IMAGE_UPDATE_NOPURGE to skip cleanup of dangling images
 ###
 
 # Bash configuration
@@ -21,11 +22,11 @@ set -o pipefail
 shopt -s extglob
 
 # Default configuration
-CMD_DOCKER="${CMD_DOCKER:-/usr/local/bin/docker}"
-CONFIG_DOCKER_IMAGE_LIST="${CONFIG_DOCKER_IMAGE_LIST:-${HOME}/.config/docker-image-list.cfg}"
+DOCKER="${DOCKER:-/usr/bin/docker}"
+DOCKER_IMAGE_UPDATE_LIST="${DOCKER_IMAGE_UPDATE_LIST:-${HOME}/.config/docker-image-list.cfg}"
 
 function load_image_list () {
-    IMAGE_FILE="${1:-${CONFIG_DOCKER_IMAGE_LIST}}"
+    IMAGE_FILE="${1:-${DOCKER_IMAGE_UPDATE_LIST}}"
     if [ ! -r "${IMAGE_FILE}" ]; then
         echo "ERROR: Image list ${IMAGE_FILE} is not readable (or does not exist)."
         exit 1
@@ -42,16 +43,16 @@ function load_image_list () {
 
 function update_image () {
     image=${1:-""}
-    ${CMD_DOCKER} pull ${image}
+    ${DOCKER} pull ${image}
 }
 
 function prune_dangling_images () {
-    local DANGLERS=$(${CMD_DOCKER} images --filter "dangling=true" -q)
+    local DANGLERS=$(${DOCKER} images --filter "dangling=true" -q)
     if [ ! -z "${DANGLERS}" ]; then
         set +e
         for image in ${DANGLERS}; do
             echo "    Pruning: ${image}"
-            ${CMD_DOCKER} rmi "${image}"
+            ${DOCKER} rmi "${image}"
         done
         set -e
     else
@@ -61,9 +62,9 @@ function prune_dangling_images () {
 
 # Load list of images to be updated
 # Use command-line argument if one was provided
-# Otherwise use CONF_DOCKER_IMAGE_LIST
+# Otherwise use CONF_DOCKER_IMAGE_UPDATE_LIST
 declare -a IMAGE_LIST
-_IMAGE_LIST_FILE="${1:-${CONFIG_DOCKER_IMAGE_LIST}}"
+_IMAGE_LIST_FILE="${1:-${DOCKER_IMAGE_UPDATE_LIST}}"
 echo "==> Updating list from ${_IMAGE_LIST_FILE}..."
 load_image_list "${_IMAGE_LIST_FILE}"
 echo "    ${#IMAGE_LIST[@]} images requested"
@@ -74,7 +75,11 @@ for image in "${IMAGE_LIST[@]}"; do
 done
 
 # Prune dangling (unused) images
-echo "==> Pruning dangling images"
-prune_dangling_images
+if [ -z "${DOCKER_IMAGE_UPDATE_NOPURGE:+x}" ]; then
+    echo "==> Pruning dangling images"
+    prune_dangling_images
+else
+    echo "==> Skipping cleanup of dangling images"
+fi
 
 echo "=== Done."
