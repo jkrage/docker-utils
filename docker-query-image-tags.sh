@@ -35,7 +35,7 @@ for _image in $* ;do
     _JSON=$("${CMD_CURL}" -sSL "${_QUERY_URL}")
     if [ "$?" ]; then
         _TAGS=$(echo ${_JSON} |sed -E -e 's/^\{"count":.+"results": \[(.+)\]\}$/\1/' -e 's/\{"name": "([^"]+)"[^\}]+\},?/\1/g')
-        echo "${_image}: (${#_JSON} tags)"
+        echo "${_image}: (${#_TAGS} tags)"
         echo "    ${_TAGS}"
     else
         _ERR=$?
