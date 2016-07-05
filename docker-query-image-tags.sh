@@ -34,6 +34,9 @@ for _image in $* ;do
     _QUERY_URL="${DOCKER_REGISTRY}/${_image}/tags/"
     _JSON=$("${CMD_CURL}" -sSL "${_QUERY_URL}")
     if [ "$?" ]; then
+        # Extract the image tags from the json
+        #   (1) Only process the results[] top-level attribute
+        #   (2) Assume name attribute is first: {"name": "<tag>" ...}
         _TAGS=$(echo ${_JSON} |sed -E -e 's/^\{"count":.+"results": \[(.+)\]\}$/\1/' -e 's/\{"name": "([^"]+)"[^\}]+\},?/\1/g')
         echo "${_image}: (${#_TAGS} tags)"
         echo "    ${_TAGS}"
