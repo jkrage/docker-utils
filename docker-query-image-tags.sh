@@ -38,7 +38,13 @@ for _image in $* ;do
         #   (1) Only process the results[] top-level attribute
         #   (2) Assume name attribute is first: {"name": "<tag>" ...}
         _TAGS=$(echo ${_JSON} |sed -E -e 's/^\{"count":.+"results": \[(.+)\]\}$/\1/' -e 's/\{"name": "([^"]+)"[^\}]+\},?/\1/g')
-        echo "${_image}: (${#_TAGS} tags)"
+
+        _TAG_COUNT_CAUTION=""
+        if [ ${#_TAGS} -gt 10 ]; then
+            _TAG_COUNT_CAUTION=", only showing first 10"
+        fi
+
+        echo "${_image}: (${#_TAGS} tags${_TAG_COUNT_CAUTION})"
         echo "    ${_TAGS}"
     else
         _ERR=$?
