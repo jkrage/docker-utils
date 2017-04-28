@@ -16,7 +16,7 @@
 
 # Bash configuration
 # Stop on errors, safe handling, extend globbing
-set -e
+#set -e
 set -u
 set -o pipefail
 shopt -s extglob
@@ -24,6 +24,9 @@ shopt -s extglob
 # Default configuration
 DOCKER="${DOCKER:-/usr/bin/docker}"
 DOCKER_IMAGE_UPDATE_LIST="${DOCKER_IMAGE_UPDATE_LIST:-${HOME}/.config/docker-image-list.cfg}"
+
+# Enable Docker content trust
+export DOCKER_CONTENT_TRUST=1
 
 function load_image_list () {
     IMAGE_FILE="${1:-${DOCKER_IMAGE_UPDATE_LIST}}"
