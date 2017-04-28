@@ -16,7 +16,7 @@
 
 # Bash configuration
 # Stop on errors, safe handling, extend globbing
-#set -e
+set -e
 set -u
 set -o pipefail
 shopt -s extglob
@@ -46,9 +46,11 @@ function load_image_list () {
 
 function update_image () {
     image=${1:-""}
-    if ! output=$(${DOCKER} pull ${image} 2>&1 >/dev/null) ; then
+    set +e
+    if ! output=$(${DOCKER} pull "${image}" 2>&1 >/dev/null) ; then
         echo "${output}"
     fi
+    set -e
 }
 
 function prune_dangling_images () {
@@ -57,7 +59,9 @@ function prune_dangling_images () {
         set +e
         for image in ${DANGLERS}; do
             echo "    Pruning: ${image}"
-            ${DOCKER} rmi "${image}"
+            if ! output=$(${DOCKER} rmi "${image}" 2>&1 >/dev/null) ; then
+                echo "${output}"
+            fi
         done
         set -e
     else
@@ -70,9 +74,8 @@ function prune_dangling_images () {
 # Otherwise use CONF_DOCKER_IMAGE_UPDATE_LIST
 declare -a IMAGE_LIST
 _IMAGE_LIST_FILE="${1:-${DOCKER_IMAGE_UPDATE_LIST}}"
-echo "==> Updating list from ${_IMAGE_LIST_FILE}..."
 load_image_list "${_IMAGE_LIST_FILE}"
-echo "    ${#IMAGE_LIST[@]} images requested"
+echo "==> Updating ${#IMAGE_LIST[@]} images listed in ${_IMAGE_LIST_FILE}"
 
 for image in "${IMAGE_LIST[@]}"; do
   echo "--> Processing ${image}"
@@ -81,9 +84,11 @@ done
 
 # Prune dangling (unused) images
 if [ -z "${DOCKER_IMAGE_UPDATE_NOPURGE:+x}" ]; then
+    echo
     echo "==> Pruning dangling images"
     prune_dangling_images
 else
+    echo
     echo "==> Skipping cleanup of dangling images"
 fi
 
