@@ -46,7 +46,9 @@ function load_image_list () {
 
 function update_image () {
     image=${1:-""}
-    ${DOCKER} pull ${image}
+    if ! output=$(${DOCKER} pull ${image} 2>&1 >/dev/null) ; then
+        echo "${output}"
+    fi
 }
 
 function prune_dangling_images () {
